@@ -4,11 +4,15 @@ const path = require('path');
 
 const app = express();
 
+// Proxy Okta API calls
+const oktaDomain = 'https://trial-1584011.okta.com';
+
 // Serve static files from 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Proxy Okta API calls
-const oktaDomain = 'https://trial-1584011.okta.com';
+// Allow parsing form data
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use('/oauth2', createProxyMiddleware({
   target: oktaDomain,
