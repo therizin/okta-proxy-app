@@ -4,9 +4,8 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// fallback to index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
+app.get('/callback', (req, res) => {
+  res.send('<h3>Login successful. You may close this window.</h3>');
 });
 
 const PORT = process.env.PORT || 3000;
