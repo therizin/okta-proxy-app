@@ -11,11 +11,11 @@
   <div id="okta-login-container"></div>
   <script>
     const signIn = new OktaSignIn({
-      baseUrl: "https://trial-1584011.okta.com", // <-- replace with your real Okta domain
+      baseUrl: "https://okta-proxy-app.onrender.com", // <-- replace with your real Okta domain
       clientId: "0oas1r4u9sS1e5tLh697",           // <-- replace with your Okta client ID
       redirectUri: "https://okta-proxy-app.onrender.com/callback", // must match app settings
       authParams: {
-        issuer: "https://trial-1584011.okta.com/oauth2/default",
+        issuer: "https://okta-proxy-app.onrender.com/oauth2/default",
         pkce: true,
         scopes: ["openid", "email", "profile"]
       }
