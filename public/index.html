@@ -1,58 +1,54 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <link href="https://global.oktacdn.com/okta-signin-widget/7.32.0/css/okta-sign-in.min.css" rel="stylesheet">
-    <script src="https://global.oktacdn.com/okta-signin-widget/7.32.0/js/okta-sign-in.min.js"></script>
-    <title>Okta Login via Proxy</title>
-    <style>
-      h1 { margin: 2em 0; }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1 class="text-center">Simple Web Page</h1>
-      <div id="messageBox" class="jumbotron">You are not logged in.</div>
-      <div id="okta-login-container"></div>
-      <button id="logout" class="btn btn-danger" onclick="logout()" style="display: none;">Logout</button>
-    </div>
-    <script type="text/javascript">
-      const oktaConfig = {
-        baseUrl: "https://trial-1584011.okta.com",
-        clientId: "0oas1r4u9sS1e5tLh697",
-        redirectUri: "https://okta-proxy-app.onrender.com",
-        authParams: {
-          pkce: true,
-          issuer: "https://trial-1584011.okta.com/oauth2/default",
-          scopes: ['openid', 'email', 'profile']
-        }
-      };
+<head>
+  <meta charset="UTF-8">
+  <title>PKCE Login</title>
+</head>
+<body>
+  <h1>PKCE Login Flow</h1>
+  <div id="content">You are not logged in.</div>
+  <button id="login">Login</button>
+  <button id="logout" style="display:none;">Logout</button>
 
-      const oktaSignIn = new OktaSignIn(oktaConfig);
+  <script src="https://global.oktacdn.com/okta-auth-js/7.2.2/okta-auth-js.min.js"></script>
+  <script>
+    const oktaAuth = new OktaAuth({
+      issuer: 'https://trial-1584011.okta.com/oauth2/default',
+      clientId: '0oas1r4u9sS1e5tLh697',
+      redirectUri: window.location.origin + '/callback',
+      scopes: ['openid', 'email', 'profile'],
+      pkce: true
+    });
 
-      oktaSignIn.authClient.token.getUserInfo().then(function(user) {
-        document.getElementById("messageBox").innerHTML = "Hello, " + user.email + "! You are *still* logged in!";
-        document.getElementById("logout").style.display = 'block';
-      }, function() {
-        oktaSignIn.showSignInToGetTokens({ el: '#okta-login-container' })
-          .then(function(tokens) {
-            oktaSignIn.authClient.tokenManager.setTokens(tokens);
-            oktaSignIn.remove();
-            const idToken = tokens.idToken;
-            document.getElementById("messageBox").innerHTML = "Hello, " + idToken.claims.email + "! You just logged in!";
-            document.getElementById("logout").style.display = 'block';
-          }).catch(function(err) {
-            console.error('Sign-in error:', err);
-            document.getElementById("messageBox").innerHTML = "There was an error during sign-in.";
-          });
-      });
+    async function handleLogin() {
+      await oktaAuth.token.getWithRedirect();
+    }
 
-      function logout() {
-        oktaSignIn.authClient.signOut();
-        location.reload();
+    async function handleLogout() {
+      await oktaAuth.signOut();
+    }
+
+    async function handleCallback() {
+      if (window.location.pathname === '/callback') {
+        const tokens = await oktaAuth.token.parseFromUrl();
+        oktaAuth.tokenManager.setTokens(tokens.tokens);
+        window.history.replaceState({}, document.title, '/');
       }
-    </script>
-  </body>
+    }
+
+    async function checkSession() {
+      const user = await oktaAuth.token.getUserInfo().catch(() => null);
+      if (user) {
+        document.getElementById('content').textContent = `Hello, ${user.email}`;
+        document.getElementById('logout').style.display = 'inline-block';
+        document.getElementById('login').style.display = 'none';
+      }
+    }
+
+    document.getElementById('login').addEventListener('click', handleLogin);
+    document.getElementById('logout').addEventListener('click', handleLogout);
+
+    handleCallback().then(checkSession);
+  </script>
+</body>
 </html>
