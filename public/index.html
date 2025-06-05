@@ -1,54 +1,35 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PKCE Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Okta Login</title>
+  <link href="https://global.oktacdn.com/okta-signin-widget/7.32.0/css/okta-sign-in.min.css" rel="stylesheet"/>
+  <script src="https://global.oktacdn.com/okta-signin-widget/7.32.0/js/okta-sign-in.min.js"></script>
 </head>
 <body>
-  <h1>PKCE Login Flow</h1>
-  <div id="content">You are not logged in.</div>
-  <button id="login">Login</button>
-  <button id="logout" style="display:none;">Logout</button>
-
-  <script src="https://global.oktacdn.com/okta-auth-js/7.2.2/okta-auth-js.min.js"></script>
+  <div id="okta-login-container"></div>
   <script>
-    const oktaAuth = new OktaAuth({
-      issuer: 'https://trial-1584011.okta.com/oauth2/default',
-      clientId: '0oas1r4u9sS1e5tLh697',
-      redirectUri: window.location.origin + '/callback',
-      scopes: ['openid', 'email', 'profile'],
-      pkce: true
+    const signIn = new OktaSignIn({
+      baseUrl: "https://trial-1584011.okta.com", // <-- replace with your real Okta domain
+      clientId: "0oas1r4u9sS1e5tLh697",           // <-- replace with your Okta client ID
+      redirectUri: "https://okta-proxy-app.onrender.com/callback", // must match app settings
+      authParams: {
+        issuer: "https://trial-1584011.okta.com/oauth2/default",
+        pkce: true,
+        scopes: ["openid", "email", "profile"]
+      }
     });
 
-    async function handleLogin() {
-      await oktaAuth.token.getWithRedirect();
-    }
-
-    async function handleLogout() {
-      await oktaAuth.signOut();
-    }
-
-    async function handleCallback() {
-      if (window.location.pathname === '/callback') {
-        const tokens = await oktaAuth.token.parseFromUrl();
-        oktaAuth.tokenManager.setTokens(tokens.tokens);
-        window.history.replaceState({}, document.title, '/');
-      }
-    }
-
-    async function checkSession() {
-      const user = await oktaAuth.token.getUserInfo().catch(() => null);
-      if (user) {
-        document.getElementById('content').textContent = `Hello, ${user.email}`;
-        document.getElementById('logout').style.display = 'inline-block';
-        document.getElementById('login').style.display = 'none';
-      }
-    }
-
-    document.getElementById('login').addEventListener('click', handleLogin);
-    document.getElementById('logout').addEventListener('click', handleLogout);
-
-    handleCallback().then(checkSession);
+    signIn.showSignInToGetTokens({
+      el: "#okta-login-container"
+    }).then(tokens => {
+      signIn.authClient.tokenManager.setTokens(tokens);
+      const idToken = tokens.idToken;
+      document.body.innerHTML = `<h2>Logged in as ${idToken.claims.email}</h2>`;
+    }).catch(err => {
+      console.error(err);
+    });
   </script>
 </body>
 </html>
