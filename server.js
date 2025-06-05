@@ -6,13 +6,6 @@ const app = express();
 // ✅ Okta domain to proxy to
 const oktaDomain = 'https://trial-1584011.okta.com';
 
-// ✅ Proxy Okta OAuth2 endpoints
-app.use('/oauth2', createProxyMiddleware({
-  target: oktaDomain,
-  changeOrigin: true,
-  pathRewrite: { '^/oauth2': '/oauth2' },
-}));
-
 // ✅ Serve static frontend (including Sign-In Widget)
 app.use(express.static(path.join(__dirname, 'public')));
 
