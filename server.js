@@ -14,6 +14,13 @@ app.use('/oauth2', createProxyMiddleware({
   target: oktaDomain,
   changeOrigin: true,
   pathRewrite: { '^/oauth2': '/oauth2' },
+  onProxyReq: (proxyReq, req) => {
+    if (req.body) {
+      const bodyData = new URLSearchParams(req.body).toString();
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.write(bodyData);
+    }
+  }
 }));
 
 app.get('/.well-known/openid-configuration', (req, res) => {
